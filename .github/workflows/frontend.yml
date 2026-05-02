@@ -1,0 +1,28 @@
+name: Frontend CI
+
+on:
+  push:
+    paths:
+      - "client/**"
+      - ".github/workflows/frontend.yml"
+  pull_request:
+    paths:
+      - "client/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - name: Install
+        working-directory: client
+        run: npm install
+      - name: Build frontend
+        working-directory: client
+        run: npm run build
+
