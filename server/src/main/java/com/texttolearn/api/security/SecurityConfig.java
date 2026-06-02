@@ -32,8 +32,12 @@ public class SecurityConfig {
                 .anonymous(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/**", "/actuator/**").permitAll()
-                        .anyRequest().permitAll()
+                        .requestMatchers("/actuator/**", "/api/health").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/courses/generate").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/courses", "/api/courses/*", "/api/youtube").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/courses/my").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/courses/*").authenticated()
+                        .anyRequest().authenticated()
                 );
 
         if (StringUtils.hasText(issuerUri)) {

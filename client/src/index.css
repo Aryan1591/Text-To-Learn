@@ -54,6 +54,7 @@ select {
   display: flex;
   flex-direction: column;
   gap: 34px;
+  backdrop-filter: blur(6px);
 }
 
 .brand,
@@ -97,8 +98,23 @@ select {
   color: rgba(255, 248, 237, 0.78);
 }
 
+.nav-link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: 0;
+  text-align: left;
+  padding: 13px 14px;
+  border-radius: 16px;
+  color: rgba(255, 248, 237, 0.78);
+  background: transparent;
+  cursor: pointer;
+}
+
 .nav-stack a.active,
-.nav-stack a:hover {
+.nav-stack a:hover,
+.nav-link-button:hover {
   background: rgba(255, 248, 237, 0.12);
   color: #fff8ed;
 }
@@ -172,6 +188,7 @@ select {
   border-radius: 32px;
   background: rgba(255, 248, 237, 0.78);
   box-shadow: var(--shadow);
+  transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 .hero-panel {
@@ -262,6 +279,13 @@ select {
   font-weight: 800;
 }
 
+.auth-error {
+  display: block;
+  margin-top: 8px;
+  color: #8d2525;
+  font-weight: 600;
+}
+
 .recent-panel {
   padding: 24px;
 }
@@ -280,6 +304,15 @@ select {
   border: 1px solid var(--line);
   border-radius: 24px;
   background: #fffdf7;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.course-card:hover,
+.module-card:hover,
+.hero-panel:hover,
+.recent-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 28px 70px rgba(36, 76, 115, 0.16);
 }
 
 .course-card h3,
@@ -369,6 +402,13 @@ select {
   border-radius: 18px;
   background: #fffdf7;
   font-weight: 700;
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.lesson-list a:hover {
+  transform: translateX(3px);
+  border-color: rgba(36, 76, 115, 0.45);
+  background: #fff7e9;
 }
 
 .lesson-toolbar {
@@ -531,6 +571,10 @@ select {
   .sidebar {
     position: static;
     height: auto;
+  }
+
+  .nav-link-button {
+    width: auto;
   }
 }
 

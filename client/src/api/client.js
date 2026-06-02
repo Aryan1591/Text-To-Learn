@@ -40,7 +40,7 @@ export const api = {
     body: JSON.stringify(body),
   }, getToken),
   listCourses: () => request('/api/courses'),
+  listMyCourses: (getToken) => request('/api/courses/my', {}, getToken),
   getCourse: (id) => request(`/api/courses/${id}`),
   getVideo: (query) => request(`/api/youtube?query=${encodeURIComponent(query)}`),
 };
-

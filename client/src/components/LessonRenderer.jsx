@@ -6,6 +6,31 @@ import MCQBlock from './blocks/MCQBlock.jsx';
 
 export default function LessonRenderer({ lesson }) {
   if (!lesson) return null;
+  const seenMcq = new Set();
+  const seenText = new Set();
+  let videoSeen = false;
+  const sanitizedContent = (lesson.content || []).filter((block) => {
+    if (!block || !block.type) return false;
+    const type = block.type.toLowerCase();
+    if (type === 'mcq') {
+      const key = (block.question || '').trim().toLowerCase();
+      if (!key || seenMcq.has(key)) return false;
+      seenMcq.add(key);
+      return true;
+    }
+    if (type === 'heading' || type === 'paragraph') {
+      const key = `${type}|${(block.text || '').trim().toLowerCase()}`;
+      if (!block.text || seenText.has(key)) return false;
+      seenText.add(key);
+      return true;
+    }
+    if (type === 'video') {
+      if (videoSeen) return false;
+      videoSeen = true;
+      return true;
+    }
+    return true;
+  });
 
   return (
     <article className="lesson-document">
@@ -18,7 +43,7 @@ export default function LessonRenderer({ lesson }) {
         </ul>
       </section>
 
-      {lesson.content?.map((block, index) => {
+      {sanitizedContent.map((block, index) => {
         const key = `${block.type}-${index}`;
         switch (block.type) {
           case 'heading':
@@ -38,4 +63,3 @@ export default function LessonRenderer({ lesson }) {
     </article>
   );
 }
-

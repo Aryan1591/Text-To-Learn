@@ -8,3 +8,6 @@ dist/
 *.log
 *.class
 
+# Ignore local description file with embedded keys
+description.txt
+

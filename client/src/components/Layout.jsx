@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { BookOpenText, GraduationCap, LogIn, LogOut, Sparkles } from 'lucide-react';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useState } from 'react';
 
 function AuthActions({ authConfigured }) {
   if (!authConfigured) {
@@ -11,24 +12,54 @@ function AuthActions({ authConfigured }) {
 }
 
 function ConfiguredAuthActions() {
-  const { isAuthenticated, loginWithRedirect, logout, user } = useAuth0();
+  const { isAuthenticated, isLoading, loginWithRedirect, logout } = useAuth0();
+  const [authError, setAuthError] = useState('');
+  const [redirecting, setRedirecting] = useState(false);
+
+  async function handleLogin() {
+    setAuthError('');
+    setRedirecting(true);
+    try {
+      await loginWithRedirect({
+        appState: { returnTo: window.location.pathname },
+        authorizationParams: { prompt: 'login' },
+      });
+    } catch (error) {
+      setAuthError(error?.message || 'Unable to start login. Please check Auth0 settings.');
+      setRedirecting(false);
+    }
+  }
+
+  if (isLoading) {
+    return <span className="auth-pill">Auth loading...</span>;
+  }
+
   if (!isAuthenticated) {
     return (
-      <button className="ghost-button" onClick={() => loginWithRedirect()}>
-        <LogIn size={16} /> Login
-      </button>
+      <div>
+        <button type="button" className="ghost-button" onClick={handleLogin} disabled={redirecting}>
+          <LogIn size={16} /> {redirecting ? 'Redirecting...' : 'Login'}
+        </button>
+        {authError ? <small className="auth-error">{authError}</small> : null}
+      </div>
     );
   }
 
   return (
     <button className="ghost-button" onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}>
-      <LogOut size={16} /> {user?.name || 'Logout'}
+      <LogOut size={16} /> Logout
     </button>
   );
 }
 
 export default function Layout({ authConfigured }) {
   const location = useLocation();
+  function scrollToRecent() {
+    const el = document.getElementById('recent');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 
   return (
     <div className="app-shell">
@@ -45,15 +76,10 @@ export default function Layout({ authConfigured }) {
           <Link className={location.pathname === '/' ? 'active' : ''} to="/">
             <Sparkles size={18} /> Generate
           </Link>
-          <a href="#recent">
+          <button type="button" className="nav-link-button" onClick={scrollToRecent}>
             <BookOpenText size={18} /> Recent courses
-          </a>
+          </button>
         </nav>
-
-        <div className="sidebar-card">
-          <p>Hackathon-ready stack</p>
-          <span>React + Spring Boot + MongoDB + Auth0</span>
-        </div>
       </aside>
 
       <main className="content-area">

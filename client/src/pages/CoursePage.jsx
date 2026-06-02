@@ -19,6 +19,16 @@ export default function CoursePage() {
   if (error) return <ErrorMessage message={error} />;
   if (!course) return <LoadingSpinner label="Opening course..." />;
 
+  function moduleSummary(module, moduleIndex) {
+    if (module?.summary?.trim()) return module.summary.trim();
+    const lessonCount = module?.lessons?.length || 0;
+    const firstObjectives = module?.lessons?.[0]?.objectives?.slice(0, 2) || [];
+    const objectiveHint = firstObjectives.length
+      ? ` Focus: ${firstObjectives.join(' | ')}.`
+      : '';
+    return `Module ${moduleIndex + 1} covers ${lessonCount} lesson${lessonCount === 1 ? '' : 's'} with a structured progression from concepts to practice.${objectiveHint}`;
+  }
+
   return (
     <section className="course-overview">
       <div className="course-hero">
@@ -38,7 +48,8 @@ export default function CoursePage() {
               <div>
                 <span>Module {moduleIndex + 1}</span>
                 <h3>{module.title}</h3>
-                <p>{module.summary}</p>
+                <p>{moduleSummary(module, moduleIndex)}</p>
+                <p className="eyebrow">{module.lessons?.length || 0} lessons</p>
               </div>
             </div>
             <div className="lesson-list">
@@ -55,4 +66,3 @@ export default function CoursePage() {
     </section>
   );
 }
-

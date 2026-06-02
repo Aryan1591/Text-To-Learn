@@ -16,8 +16,10 @@ import com.texttolearn.api.dto.GenerateCourseRequest;
 import com.texttolearn.api.model.Course;
 import com.texttolearn.api.model.CourseModule;
 import com.texttolearn.api.model.Lesson;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class GeminiCourseGenerationService {
     private final AppProperties properties;
     private final WebClient webClient;
@@ -36,6 +38,8 @@ public class GeminiCourseGenerationService {
 
     @SuppressWarnings("unchecked")
     public Course generate(GenerateCourseRequest request, String creator) {
+        log.info("Requesting Gemini course generation for topic: '{}', level: '{}', model: '{}'",
+                request.topic(), request.learningLevel(), properties.geminiModel());
         String prompt = buildPrompt(request);
         Map<String, Object> body = Map.of(
                 "contents", List.of(Map.of(
@@ -59,11 +63,16 @@ public class GeminiCourseGenerationService {
                 .block();
 
         String json = extractText(response);
+        log.debug("Raw Gemini JSON response: {}", json);
         try {
-            Course course = objectMapper.readValue(stripCodeFence(json), Course.class);
+            String stripped = stripCodeFence(json);
+            Course course = objectMapper.readValue(stripped, Course.class);
             hydrateGeneratedCourse(course, request.topic(), creator);
+            log.info("Successfully generated course with {} modules from Gemini",
+                    course.getModules() != null ? course.getModules().size() : 0);
             return course;
         } catch (Exception ex) {
+            log.error("Failed to parse Gemini JSON. Raw JSON:\n{}\nError: {}", json, ex.getMessage(), ex);
             throw new IllegalArgumentException("Gemini returned invalid course JSON. Try again with a clearer topic.");
         }
     }
@@ -127,10 +136,16 @@ public class GeminiCourseGenerationService {
                 Rules:
                 - Create 3 to 6 modules.
                 - Each module must contain 3 to 5 lessons.
+                - Every module title and lesson title must be explicitly tied to the input topic. Avoid generic titles that could fit any subject.
+                - For technical/engineering topics (like "System Design for Uber"), focus the lesson content and titles on actual concrete architectural components, data flows, databases, design choices, trade-offs, and protocols (e.g. Geospatial indexing, quadtrees, web sockets, MongoDB vs Cassandra, consistent hashing, matching algorithms) instead of generic high-level tutorials.
                 - Each lesson must include objectives, at least 2 paragraphs, a video query, and 4 MCQs.
+                - The 4 MCQs in a lesson must be unique and test different ideas (concept, application, mistake analysis, revision strategy).
                 - Add code blocks only for programming/technical topics where code is useful.
+                - Adapt depth, terminology, examples, and MCQ difficulty to learner level.
+                - Video query should include topic + lesson title + learner level keyword (beginner/intermediate/advanced).
                 - Use zero-based index for MCQ answer.
                 - Keep content accurate, beginner-friendly, and practical.
+                - Do not use filler headings like "Mistakes Beginners Make" unless followed by a topic-specific qualifier.
                 """.formatted(
                 request.topic(),
                 StringUtils.hasText(request.learningLevel()) ? request.learningLevel() : "Beginner to intermediate",
@@ -170,4 +185,3 @@ public class GeminiCourseGenerationService {
         }
     }
 }
-
