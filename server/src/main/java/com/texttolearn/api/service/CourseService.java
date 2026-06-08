@@ -89,7 +89,19 @@ public class CourseService {
         }
         String level = normalizeLevel(learningLevel);
         String topicText = StringUtils.hasText(topic) ? topic.trim() : "the topic";
+        Set<String> seenModuleTitles = new LinkedHashSet<>();
+        Set<String> seenLessonTitles = new LinkedHashSet<>();
         for (CourseModule module : course.getModules()) {
+            if (module == null) {
+                continue;
+            }
+            String moduleKey = normalizeText(module.getTitle());
+            if (!StringUtils.hasText(module.getTitle()) || seenModuleTitles.contains(moduleKey)) {
+                module.setTitle(topicText + " - " + (seenModuleTitles.size() + 1));
+                moduleKey = normalizeText(module.getTitle());
+            }
+            seenModuleTitles.add(moduleKey);
+
             if (!StringUtils.hasText(module.getSummary())) {
                 module.setSummary("Focused coverage of " + topicText + " with practical progression and revision checkpoints.");
             }
@@ -97,8 +109,41 @@ public class CourseService {
                 continue;
             }
             for (Lesson lesson : module.getLessons()) {
+                if (lesson == null) {
+                    continue;
+                }
+                String lessonKey = normalizeText(lesson.getTitle());
+                if (!StringUtils.hasText(lesson.getTitle()) || seenLessonTitles.contains(lessonKey)) {
+                    lesson.setTitle(topicText + " lesson " + (seenLessonTitles.size() + 1));
+                    lessonKey = normalizeText(lesson.getTitle());
+                }
+                seenLessonTitles.add(lessonKey);
+
                 if (!containsTopicHint(lesson.getTitle(), topicText)) {
                     lesson.setTitle(lesson.getTitle() + " - " + topicText);
+                }
+                if (lesson.getObjectives() != null) {
+                    List<String> uniqueObjectives = new ArrayList<>();
+                    Set<String> seenObjectives = new LinkedHashSet<>();
+                    for (String objective : lesson.getObjectives()) {
+                        if (!StringUtils.hasText(objective)) {
+                            continue;
+                        }
+                        String objectiveKey = normalizeText(objective);
+                        if (seenObjectives.contains(objectiveKey)) {
+                            continue;
+                        }
+                        seenObjectives.add(objectiveKey);
+                        uniqueObjectives.add(objective);
+                    }
+                    if (uniqueObjectives.size() < 3) {
+                        uniqueObjectives = new ArrayList<>(List.of(
+                                "Explain the role of " + lesson.getTitle() + " in " + topicText + ".",
+                                "Identify a practical example of " + topicText + ".",
+                                "Apply the idea in a short scenario for " + topicText + "."
+                        ));
+                    }
+                    lesson.setObjectives(uniqueObjectives);
                 }
                 if (lesson.getContent() == null) {
                     continue;
@@ -296,6 +341,32 @@ public class CourseService {
                         }
                     }
                 }
+                if (!lessonMatched && lesson.getContent() != null) {
+                    int checkedBlocks = 0;
+                    int relevantBlocks = 0;
+                    for (ContentBlock block : lesson.getContent()) {
+                        if (block == null) {
+                            continue;
+                        }
+                        String blockText = switch (block.getType() == null ? "" : block.getType().toLowerCase(Locale.ROOT)) {
+                            case "heading" -> block.getText();
+                            case "paragraph" -> block.getText();
+                            case "video" -> block.getQuery();
+                            case "mcq" -> block.getQuestion();
+                            default -> block.getText();
+                        };
+                        if (!StringUtils.hasText(blockText)) {
+                            continue;
+                        }
+                        checkedBlocks++;
+                        if (matchesTopic(blockText, topic, topicTokens)) {
+                            relevantBlocks++;
+                        }
+                    }
+                    if (checkedBlocks > 0 && relevantBlocks >= Math.max(1, checkedBlocks / 3)) {
+                        lessonMatched = true;
+                    }
+                }
                 if (lessonMatched) {
                     matchedUnits++;
                 }
@@ -307,7 +378,7 @@ public class CourseService {
             return false;
         }
         double ratio = (double) matchedUnits / totalUnits;
-        double requiredRatio = primaryMetadataMatches ? 0.15 : 0.35;
+        double requiredRatio = primaryMetadataMatches ? 0.35 : 0.6;
         boolean isRelevant = ratio >= requiredRatio;
 
         log.info("Relevance Check for '{}': primaryMetadataMatches={}, titleMatches={}, descriptionMatches={}, " +

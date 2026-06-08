@@ -91,11 +91,14 @@ public class GeminiCourseGenerationService {
     }
 
     private String buildPrompt(GenerateCourseRequest request) {
+        String topic = StringUtils.hasText(request.topic()) ? request.topic().trim() : "";
+        String topicProfile = topicProfile(topic);
         return """
                 Generate a complete online course for this topic: "%s".
 
                 Learner level: %s
                 Language preference: %s
+                Topic profile: %s
 
                 Return raw JSON only. Do not include Markdown fences, comments, or explanations.
 
@@ -136,8 +139,9 @@ public class GeminiCourseGenerationService {
                 Rules:
                 - Create 3 to 6 modules.
                 - Each module must contain 3 to 5 lessons.
-                - Every module title and lesson title must be explicitly tied to the input topic. Avoid generic titles that could fit any subject.
-                - For technical/engineering topics (like "System Design for Uber"), focus the lesson content and titles on actual concrete architectural components, data flows, databases, design choices, trade-offs, and protocols (e.g. Geospatial indexing, quadtrees, web sockets, MongoDB vs Cassandra, consistent hashing, matching algorithms) instead of generic high-level tutorials.
+                - Every module title, lesson title, summary, objective, paragraph, and MCQ must stay tightly tied to the input topic.
+                - Do not drift into unrelated topics, generic productivity content, or broad theory not directly connected to the topic.
+                - If the topic profile is system-design, center the course on requirements, capacity, architecture, scaling, reliability, caching, data flow, bottlenecks, and interview trade-offs.
                 - Each lesson must include objectives, at least 2 paragraphs, a video query, and 4 MCQs.
                 - The 4 MCQs in a lesson must be unique and test different ideas (concept, application, mistake analysis, revision strategy).
                 - Add code blocks only for programming/technical topics where code is useful.
@@ -149,7 +153,8 @@ public class GeminiCourseGenerationService {
                 """.formatted(
                 request.topic(),
                 StringUtils.hasText(request.learningLevel()) ? request.learningLevel() : "Beginner to intermediate",
-                StringUtils.hasText(request.languagePreference()) ? request.languagePreference() : "English with Hinglish support"
+                StringUtils.hasText(request.languagePreference()) ? request.languagePreference() : "English with Hinglish support",
+                topicProfile
         );
     }
 
@@ -183,5 +188,21 @@ public class GeminiCourseGenerationService {
                 }
             }
         }
+    }
+
+    private String topicProfile(String topic) {
+        String normalized = topic == null ? "" : topic.toLowerCase();
+        if (normalized.contains("system design") || normalized.contains("system architecture") || normalized.contains("distributed system")) {
+            return "system-design";
+        }
+        if (normalized.contains("java") || normalized.contains("spring") || normalized.contains("react") || normalized.contains("python")
+                || normalized.contains("javascript") || normalized.contains("programming") || normalized.contains("coding")
+                || normalized.contains("algorithms") || normalized.contains("data structure")) {
+            return "programming";
+        }
+        if (normalized.contains("law") || normalized.contains("legal") || normalized.contains("copyright") || normalized.contains("policy")) {
+            return "law";
+        }
+        return "general";
     }
 }

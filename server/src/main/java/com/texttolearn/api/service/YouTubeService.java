@@ -70,6 +70,15 @@ public class YouTubeService {
         }
 
         Map<String, Object> first = pickMostRelevant(items, query);
+        if (first == null) {
+            String encoded = URLEncoder.encode(query, StandardCharsets.UTF_8);
+            return new VideoResult(
+                    "Search YouTube: " + query,
+                    null,
+                    null,
+                    "https://www.youtube.com/results?search_query=" + encoded
+            );
+        }
         Map<String, Object> id = (Map<String, Object>) first.get("id");
         Map<String, Object> snippet = (Map<String, Object>) first.get("snippet");
         String videoId = (String) id.get("videoId");
@@ -115,9 +124,13 @@ public class YouTubeService {
                 .filter(item -> item.get("id") != null)
                 .collect(Collectors.toMap(item -> String.valueOf(item.get("id")), item -> item, (a, b) -> a));
 
-        return items.stream()
+        Map<String, Object> best = items.stream()
                 .max(Comparator.comparingDouble(item -> scoreItem(item, detailById, queryTokens)))
-                .orElse(items.get(0));
+                .orElse(null);
+        if (best == null || scoreItem(best, detailById, queryTokens) < 18.0) {
+            return null;
+        }
+        return best;
     }
 
     @SuppressWarnings("unchecked")
