@@ -23,23 +23,23 @@ This version uses a Java-friendly backend:
 
 ```text
 text-to-learn-spring/
-├── server/
-│   └── src/main/java/com/texttolearn/api/
-│       ├── config/
-│       ├── controller/
-│       ├── dto/
-│       ├── exception/
-│       ├── model/
-│       ├── repository/
-│       ├── security/
-│       └── service/
-└── client/
-    └── src/
-        ├── api/
-        ├── components/
-        ├── context/
-        ├── pages/
-        └── utils/
+|-- server/
+|   `-- src/main/java/com/texttolearn/api/
+|       |-- config/
+|       |-- controller/
+|       |-- dto/
+|       |-- exception/
+|       |-- model/
+|       |-- repository/
+|       |-- security/
+|       `-- service/
+`-- client/
+    `-- src/
+        |-- api/
+        |-- components/
+        |-- context/
+        |-- pages/
+        `-- utils/
 ```
 
 ## What You Need To Do
@@ -77,6 +77,8 @@ PORT=5000
 MONGO_URI=mongodb://localhost:27017/text_to_learn
 CLIENT_ORIGIN=http://localhost:5173
 AUTH0_ISSUER_URI=https://your-domain.auth0.com/
+# Optional fallback if you already use AUTH0_ISSUER in older docs
+# AUTH0_ISSUER=https://your-domain.auth0.com/
 AUTH0_AUDIENCE=https://text-to-learn-api
 GEMINI_API_KEY=
 OPENAI_API_KEY=
@@ -109,15 +111,35 @@ If Auth0 values are placeholders, the UI still works in guest mode for generatio
 
 Backend on Render:
 
+- Service type: `Docker`
 - Root directory: `server`
-- Build command: `mvn -DskipTests package`
-- Start command: `java -jar target/text-to-learn-api-0.0.1-SNAPSHOT.jar`
+- Environment variables:
+  - `PORT=5000`
+  - `MONGO_URI=...`
+  - `CLIENT_ORIGIN=https://your-vercel-app.vercel.app`
+  - `AUTH0_ISSUER_URI=https://your-domain.auth0.com/`
+  - `AUTH0_AUDIENCE=https://text-to-learn-api`
+  - `GEMINI_API_KEY=...`
+  - `YOUTUBE_API_KEY=...`
+
+Render will read the `server/Dockerfile` and build the Spring Boot app inside a container.
 
 Frontend on Vercel:
 
 - Root directory: `client`
 - Build command: `npm run build`
 - Output directory: `dist`
+- Environment variables:
+  - `VITE_API_URL=https://your-render-app.onrender.com`
+  - `VITE_AUTH0_DOMAIN=your-domain.auth0.com`
+  - `VITE_AUTH0_CLIENT_ID=your-client-id`
+  - `VITE_AUTH0_AUDIENCE=https://text-to-learn-api`
+
+Auth0 dashboard:
+
+- Add the Vercel URL to Allowed Callback URLs, Allowed Logout URLs, and Allowed Web Origins.
+- Add the frontend domain to any CORS or origin settings you have enabled.
+- Keep the Auth0 audience identical in the frontend and backend.
 
 ## Hackathon Demo Script
 
@@ -127,4 +149,3 @@ Frontend on Vercel:
 4. Navigate module lessons.
 5. Show MCQs, code blocks, video suggestions, and PDF download.
 6. Briefly explain backend packages and frontend components.
-

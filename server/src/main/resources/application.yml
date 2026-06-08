@@ -13,7 +13,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${AUTH0_ISSUER_URI:}
+          issuer-uri: ${AUTH0_ISSUER_URI:${AUTH0_ISSUER:}}
 
 app:
   client-origin: ${CLIENT_ORIGIN:http://localhost:5173}
