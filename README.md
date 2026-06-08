@@ -75,6 +75,7 @@ Open `http://localhost:5173`.
 ```env
 PORT=5000
 MONGO_URI=mongodb://localhost:27017/text_to_learn
+MONGO_DATABASE=text_to_learn
 CLIENT_ORIGIN=http://localhost:5173
 AUTH0_ISSUER_URI=https://your-domain.auth0.com/
 # Optional fallback if you already use AUTH0_ISSUER in older docs
@@ -115,7 +116,8 @@ Backend on Render:
 - Root directory: `server`
 - Environment variables:
   - `PORT=5000`
-  - `MONGO_URI=...`
+- `MONGO_URI=...`
+- `MONGO_DATABASE=text_to_learn`
   - `CLIENT_ORIGIN=https://your-vercel-app.vercel.app`
   - `AUTH0_ISSUER_URI=https://your-domain.auth0.com/`
   - `AUTH0_AUDIENCE=https://text-to-learn-api`
