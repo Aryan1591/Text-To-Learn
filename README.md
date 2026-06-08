@@ -40,6 +40,23 @@ text-to-learn-spring/
         |-- context/
         |-- pages/
         `-- utils/
+|-- server/
+|   `-- src/main/java/com/texttolearn/api/
+|       |-- config/
+|       |-- controller/
+|       |-- dto/
+|       |-- exception/
+|       |-- model/
+|       |-- repository/
+|       |-- security/
+|       `-- service/
+`-- client/
+    `-- src/
+        |-- api/
+        |-- components/
+        |-- context/
+        |-- pages/
+        `-- utils/
 ```
 
 ## What You Need To Do
@@ -80,6 +97,8 @@ CLIENT_ORIGIN=http://localhost:5173
 AUTH0_ISSUER_URI=https://your-domain.auth0.com/
 # Optional fallback if you already use AUTH0_ISSUER in older docs
 # AUTH0_ISSUER=https://your-domain.auth0.com/
+# Optional fallback if you already use AUTH0_ISSUER in older docs
+# AUTH0_ISSUER=https://your-domain.auth0.com/
 AUTH0_AUDIENCE=https://text-to-learn-api
 GEMINI_API_KEY=
 OPENAI_API_KEY=
@@ -113,6 +132,7 @@ If Auth0 values are placeholders, the UI still works in guest mode for generatio
 Backend on Render:
 
 - Service type: `Docker`
+- Service type: `Docker`
 - Root directory: `server`
 - Environment variables:
   - `PORT=5000`
@@ -131,6 +151,17 @@ Frontend on Vercel:
 - Root directory: `client`
 - Build command: `npm run build`
 - Output directory: `dist`
+- Environment variables:
+  - `VITE_API_URL=https://your-render-app.onrender.com`
+  - `VITE_AUTH0_DOMAIN=your-domain.auth0.com`
+  - `VITE_AUTH0_CLIENT_ID=your-client-id`
+  - `VITE_AUTH0_AUDIENCE=https://text-to-learn-api`
+
+Auth0 dashboard:
+
+- Add the Vercel URL to Allowed Callback URLs, Allowed Logout URLs, and Allowed Web Origins.
+- Add the frontend domain to any CORS or origin settings you have enabled.
+- Keep the Auth0 audience identical in the frontend and backend.
 - Environment variables:
   - `VITE_API_URL=https://your-render-app.onrender.com`
   - `VITE_AUTH0_DOMAIN=your-domain.auth0.com`
